@@ -1,0 +1,2 @@
+preguntar que hacer con el .env porque no se pasa por el gitignore
+si agregamos nuestra ips desde mongo atlas, cuando se lo clone otro no va a funcionar?
