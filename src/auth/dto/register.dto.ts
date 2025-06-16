@@ -21,12 +21,7 @@ export class RegisterDto {
   apellido: string;
 
   @IsNotEmpty({ message: 'El email es obligatorio' })
-  @IsEmail({}, { message: 'El email debe ser un correo electronico valid' })
-  @MinLength(3, { message: 'El email debe tener como minimo 3 caracteres' })
-  @MaxLength(20, { message: 'El email debe tener como maximo 20 caracteres' })
-  @Matches(/^[a-zA-Z0-9_]+$/, {
-    message: 'El email solo puede contener letras, números y guiones bajos',
-  })
+  @IsEmail({}, { message: 'El email debe ser un correo electronico válido' })
   correo: string;
 
   @IsNotEmpty({ message: 'El nombre de usuario es obligatorio' })
