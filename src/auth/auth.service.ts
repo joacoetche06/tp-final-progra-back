@@ -6,9 +6,14 @@ import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from './dto/login.dto';
 
+import { JwtService } from '@nestjs/jwt';
+
 @Injectable()
 export class AuthService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private jwtService: JwtService,
+  ) {}
 
   async register(
     dto: RegisterDto,
@@ -53,8 +58,6 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<any> {
-    //lo cambie a any para retornar el usuario sin contraseña
-
     const usuario = await this.userModel.findOne({
       $or: [
         { correo: dto.nombreUsuarioOEmail },
@@ -65,14 +68,23 @@ export class AuthService {
     if (!usuario) throw new BadRequestException('Usuario no encontrado');
 
     const validPassword = await bcrypt.compare(dto.password, usuario.password);
-
     if (!validPassword) throw new BadRequestException('Contraseña incorrecta');
+
     const { password, ...userSinPassword } = usuario.toObject();
+
+    const payload = {
+      sub: usuario._id,
+      username: usuario.nombreUsuario,
+      perfil: usuario.perfil,
+    };
+
+    const token = this.jwtService.sign(payload);
 
     return {
       success: true,
       message: 'Usuario logueado correctamente',
       data: userSinPassword,
+      access_token: token,
     };
   }
 }
