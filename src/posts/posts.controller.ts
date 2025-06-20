@@ -16,7 +16,7 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create_post.dto';
-import { QueryPostsDto } from './dto/query_post.dto';
+import { QueryPostsDto } from './dto/query_posts.dto';
 
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -43,14 +43,14 @@ export class PostsController {
     @Body() dto: CreatePostDto,
     @Req() req,
   ) {
-    const imagenUrl = imagen ? `/uploads/${imagen.filename}` : undefined;
-    return this.postsService.crear(dto, req.user.id, imagenUrl);
+    const imagenPath = imagen ? `/uploads/${imagen.filename}` : undefined;
+    return this.postsService.crear(dto, req.user.id, imagenPath);
   }
 
-  // ---------- Baja lógica ----------
+  // ---------- Eliminar ----------
   @Delete(':id')
   async softDelete(@Param('id') id: string, @Req() req) {
-    return this.postsService.bajaLogica(id, req.user);
+    return this.postsService.eliminar(id, req.user);
   }
 
   // ---------- Listado + filtros ----------
