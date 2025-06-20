@@ -5,7 +5,6 @@ import { Document } from 'mongoose';
 
 export type UserDocument = User & Document;
 
-//TODO PARA QUE ES TIMESTAMPS
 @Schema({ timestamps: true })
 export class User {
   @Prop({ required: true, trim: true })

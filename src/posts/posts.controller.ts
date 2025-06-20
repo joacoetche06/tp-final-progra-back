@@ -9,7 +9,7 @@ import {
   UseInterceptors,
   UploadedFile,
   Req,
-  ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -17,8 +17,6 @@ import { extname } from 'path';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create_post.dto';
 import { QueryPostsDto } from './dto/query_posts.dto';
-
-import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('posts')
@@ -26,7 +24,6 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  // ---------- Crear publicación ----------
   @Post()
   @UseInterceptors(
     FileInterceptor('imagen', {
@@ -47,25 +44,21 @@ export class PostsController {
     return this.postsService.crear(dto, req.user.id, imagenPath);
   }
 
-  // ---------- Eliminar ----------
+  @Get()
+  async list(@Query() dto: QueryPostsDto) {
+    return this.postsService.findAll(dto);
+  }
+
   @Delete(':id')
   async softDelete(@Param('id') id: string, @Req() req) {
     return this.postsService.eliminar(id, req.user);
   }
 
-  // ---------- Listado + filtros ----------
-  @Get()
-  async list(@Query() q: QueryPostsDto) {
-    return this.postsService.listar(q);
-  }
-
-  // ---------- Dar me gusta ----------
   @Post(':id/like')
   async like(@Param('id') id: string, @Req() req) {
     return this.postsService.darMeGusta(id, req.user.id);
   }
 
-  // ---------- Quitar me gusta ----------
   @Delete(':id/like')
   async unlike(@Param('id') id: string, @Req() req) {
     return this.postsService.quitarMeGusta(id, req.user.id);
