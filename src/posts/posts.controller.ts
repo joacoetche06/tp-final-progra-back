@@ -45,8 +45,16 @@ export class PostsController {
   }
 
   @Get()
-  async list(@Query() dto: QueryPostsDto) {
-    return this.postsService.findAll(dto);
+  async list(@Req() req, @Query() dto: QueryPostsDto) {
+    console.log('Usuario en request:', req.user);
+    try {
+      const result = await this.postsService.findAll(dto);
+      console.log('Resultado findAll:', result);
+      return result;
+    } catch (err) {
+      console.error('Error en findAll:', err);
+      throw err; // o lanzar otro error personalizado
+    }
   }
 
   @Delete(':id')
