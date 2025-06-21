@@ -17,7 +17,11 @@ export class PostsService {
     private postModel: Model<PostDocument>,
   ) {}
 
-  async crear(createPostDto: CreatePostDto, autorId: string, imagenPath?: string): Promise<Post> {
+  async crear(
+    createPostDto: CreatePostDto,
+    autorId: string,
+    imagenPath?: string,
+  ): Promise<Post> {
     const imagenUrl = imagenPath || createPostDto.imagenUrl;
 
     return this.postModel.create({
@@ -28,33 +32,62 @@ export class PostsService {
     });
   }
 
-  async findAll(getPostsDto: QueryPostsDto): Promise<{ posts: Post[]; total: number }> {
-    const { sort, userId, offset = 0, limit = 10 } = getPostsDto;
-    console.log(getPostsDto);
-    const query = this.postModel.find({ activo: true });
-
+  async findAll(dto: QueryPostsDto): Promise<{ posts: Post[]; total: number }> {
+    const { sort, userId, offset = 0, limit = 10 } = dto;
+    const filtro: any = { activo: true };
     if (userId) {
       if (!Types.ObjectId.isValid(userId)) {
         throw new NotFoundException('ID de usuario inválido');
       }
-      query.where('autor').equals(userId);
+      filtro.autor = new Types.ObjectId(userId);
     }
 
+    // Caso ordenamiento POR LIKES: usamos aggregation
     if (sort === SortBy.LIKES) {
-      query.sort({ 'meGusta.length': -1, fechaCreacion: -1 });
-    } else {
-      query.sort({ fechaCreacion: -1 });
+      const pipeline: any[] = [
+        { $match: filtro },
+        { $addFields: { likesCount: { $size: '$meGusta' } } },
+        { $sort: { likesCount: -1, fechaCreacion: -1 } },
+        { $skip: offset },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'autor',
+            foreignField: '_id',
+            as: 'autor',
+          },
+        },
+        { $unwind: '$autor' },
+        {
+          $project: {
+            titulo: 1,
+            descripcion: 1,
+            imagenUrl: 1,
+            activo: 1,
+            createdAt: 1,
+            meGusta: 1,
+            'autor.nombreUsuario': 1,
+            'autor.imagenPerfilUrl': 1,
+          },
+        },
+      ];
+
+      const posts = await this.postModel.aggregate(pipeline);
+      const total = await this.postModel.countDocuments(filtro);
+      return { posts, total };
     }
 
-    query.skip(offset).limit(limit);
-    query.populate('autor', 'nombreUsuario imagenPerfilUrl');
+    // Caso ordenamiento POR FECHA (find normal)
+    const query = this.postModel
+      .find(filtro)
+      .sort({ fechaCreacion: -1 })
+      .skip(offset)
+      .limit(limit)
+      .populate('autor', 'nombreUsuario imagenPerfilUrl');
 
     const posts = await query.exec();
-    const total = await this.postModel.countDocuments({
-      activo: true,
-      ...(userId ? { autor: userId } : {}),
-    });
-
+    const total = await this.postModel.countDocuments(filtro);
     return { posts, total };
   }
 
@@ -79,7 +112,7 @@ export class PostsService {
     const post = await this.postModel.findById(postId);
     if (!post) throw new NotFoundException('Publicación no encontrada');
 
-    if (post.meGusta.some(id => id.toString() === userId)) {
+    if (post.meGusta.some((id) => id.toString() === userId)) {
       throw new BadRequestException('Ya diste me gusta');
     }
 
@@ -93,7 +126,7 @@ export class PostsService {
     const post = await this.postModel.findById(postId);
     if (!post) throw new NotFoundException('Publicación no encontrada');
 
-    const idx = post.meGusta.findIndex(id => id.toString() === userId);
+    const idx = post.meGusta.findIndex((id) => id.toString() === userId);
     if (idx === -1) throw new BadRequestException('No habías dado me gusta');
 
     post.meGusta.splice(idx, 1);

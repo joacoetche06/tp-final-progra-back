@@ -1,12 +1,12 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User, UserDocument } from 'src/users/schemas/user.schema';
-import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from './dto/login.dto';
-
 import { JwtService } from '@nestjs/jwt';
+
+import { User, UserDocument } from '../users/schemas/user.schema';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -15,76 +15,60 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(
-    dto: RegisterDto,
-    imagenPerfil: Express.Multer.File,
-  ): Promise<any> {
-    const usuarioExistente = await this.userModel.findOne({
+  async register(dto: RegisterDto, imagenPerfil: Express.Multer.File | null): Promise<any> {
+    const exists = await this.userModel.findOne({
       $or: [
         { correo: dto.correo.toLowerCase() },
         { nombreUsuario: dto.nombreUsuario.toLowerCase() },
       ],
     });
+    if (exists) throw new BadRequestException('Usuario o correo ya registrados');
 
-    if (usuarioExistente) {
-      throw new BadRequestException('El usuario o correo ya están registrados');
-    }
+    const hashed = await bcrypt.hash(dto.password, 12);
+    const imagenPerfilUrl = imagenPerfil ? `/uploads/${imagenPerfil.filename}` : null;
 
-    const encryptPassword = await bcrypt.hash(dto.password, 12);
-    const imagenPerfilUrl = imagenPerfil
-      ? `/uploads/${imagenPerfil.filename}`
-      : null;
-
-    const usuarioNuevo = new this.userModel({
+    const user = new this.userModel({
       nombre: dto.nombre,
       apellido: dto.apellido,
-      correo: dto.correo,
-      nombreUsuario: dto.nombreUsuario,
-      password: encryptPassword,
-      descripcion: dto.descripcion ? dto.descripcion : null,
-      fechaNacimiento: dto.fechaNacimiento ? dto.fechaNacimiento : null,
+      correo: dto.correo.toLowerCase(),
+      nombreUsuario: dto.nombreUsuario.toLowerCase(),
+      password: hashed,
+      descripcion: dto.descripcion,
+      fechaNacimiento: dto.fechaNacimiento,
       perfil: 'user',
       imagenPerfilUrl,
     });
-
-    const savedUser = await usuarioNuevo.save();
-    const { password, ...userSinPassword } = savedUser.toObject();
-
-    return {
-      success: true,
-      message: 'Usuario registrado correctamente',
-      data: userSinPassword,
-    };
+    const saved = await user.save();
+    const { password, ...u } = saved.toObject();
+    return { success: true, message: 'Registrado correctamente', data: u };
   }
 
   async login(dto: LoginDto): Promise<any> {
-    const usuario = await this.userModel.findOne({
+    const user = await this.userModel.findOne({
       $or: [
-        { correo: dto.nombreUsuarioOEmail },
-        { nombreUsuario: dto.nombreUsuarioOEmail },
+        { correo: dto.nombreUsuarioOEmail.toLowerCase() },
+        { nombreUsuario: dto.nombreUsuarioOEmail.toLowerCase() },
       ],
     });
+    if (!user) throw new BadRequestException('Usuario no encontrado');
 
-    if (!usuario) throw new BadRequestException('Usuario no encontrado');
+    const ok = await bcrypt.compare(dto.password, user.password);
+    if (!ok) throw new BadRequestException('Contraseña incorrecta');
 
-    const validPassword = await bcrypt.compare(dto.password, usuario.password);
-    if (!validPassword) throw new BadRequestException('Contraseña incorrecta');
+    const { password, ...u } = user.toObject();
+    const payload = { sub: user._id, username: user.nombreUsuario, perfil: user.perfil };
+    const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
 
-    const { password, ...userSinPassword } = usuario.toObject();
+    return { success: true, message: 'Login exitoso', data: u, access_token };
+  }
 
-    const payload = {
-      sub: usuario._id,
-      username: usuario.nombreUsuario,
-      perfil: usuario.perfil,
-    };
+  verifyToken(token: string): any {
+    console.log(token);
+    return this.jwtService.verify(token, { secret: process.env.JWT_SECRET || 'secreto' });
+  }
 
-    const token = this.jwtService.sign(payload);
-
-    return {
-      success: true,
-      message: 'Usuario logueado correctamente',
-      data: userSinPassword,
-      access_token: token,
-    };
+  refreshToken(user: any): string {
+    const payload = { sub: user.id, username: user.username, perfil: user.perfil };
+    return this.jwtService.sign(payload, { expiresIn: '15m' });
   }
 }
