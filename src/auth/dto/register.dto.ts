@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import {
   IsEmail,
   IsNotEmpty,
@@ -5,6 +6,8 @@ import {
   MinLength,
   Matches,
   MaxLength,
+  IsOptional,
+  IsDate,
 } from 'class-validator';
 
 export class RegisterDto {
@@ -49,9 +52,10 @@ export class RegisterDto {
   })
   password: string;
 
-  @IsNotEmpty()
-  descripcion: string;
+  @IsOptional()
+  @IsString()
+  descripcion?: string;
 
-  @IsNotEmpty()
-  fechaNacimiento: Date;
+  @IsOptional()
+  fechaNacimiento?: Date;
 }
