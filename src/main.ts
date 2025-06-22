@@ -2,35 +2,42 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
-import { Logger } from '@nestjs/common';
-
+import { Logger, RawBodyRequest } from '@nestjs/common';
 import { ValidationPipe } from '@nestjs/common';
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false, // ¡Esto es crucial!
+  });
 
-  // Servir archivos estáticos (imágenes)
+  // Configura manualmente solo los parsers necesarios
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: true }));
+
+  // Static files
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
     prefix: '/uploads/',
   });
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true, // elimina propiedades no definidas en DTO
-      forbidNonWhitelisted: true, // lanza error si hay propiedades extra
-      transform: true, // convierte tipos automáticamente
-    }),
-  );
-
+  // CORS
   app.enableCors({
     origin: 'http://localhost:4200',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Authorization', 'Content-Type'],
   });
 
+  // Validation Pipe
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
   await app.listen(3000);
-  // dentro de bootstrap
   Logger.log(`App running on: ${await app.getUrl()}`);
-  Logger.log(`MongoDB URI: ${process.env.MONGODB_URI}`);
 }
 bootstrap();

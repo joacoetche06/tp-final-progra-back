@@ -10,6 +10,7 @@ import {
   UseGuards,
   UnauthorizedException,
   BadRequestException,
+  RawBodyRequest,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -26,24 +27,20 @@ export class AuthController {
 
   // --- Registro con subida de imagen ---
   @Post('register')
-  @UseInterceptors(
-    FileInterceptor('imagenPerfil', {
-      storage: diskStorage({
-        destination: './uploads',
-        filename: (_, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          cb(null, `imagenPerfil-${uniqueSuffix}${ext}`);
-        },
-      }),
-    }),
-  )
+  @UseInterceptors(FileInterceptor('imagenPerfil'))
   async register(
     @Body() dto: RegisterDto,
-    @UploadedFile() imagenPerfil: Express.Multer.File,
+    @Req() req: Request,
+    @UploadedFile() file: Express.Multer.File,
   ) {
-    return this.authService.register(dto, imagenPerfil);
+    console.log('Request content-type:', req.headers['content-type']);
+    // Removed req.isMultipart() as it does not exist on Request
+    console.log('File metadata:', {
+      fieldname: file?.fieldname,
+      originalname: file?.originalname,
+      size: file?.size,
+    });
+    return this.authService.register(dto, file);
   }
 
   // --- Login devuelve token de 15 minutos ---

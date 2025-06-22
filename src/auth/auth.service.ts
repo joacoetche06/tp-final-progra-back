@@ -15,17 +15,29 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto, imagenPerfil: Express.Multer.File | null): Promise<any> {
+  async register(
+    dto: RegisterDto,
+    imagenPerfil: Express.Multer.File | null,
+  ): Promise<any> {
+    console.log('Datos recibidos:', dto);
+    console.log('Archivo recibido:', {
+      originalname: imagenPerfil?.originalname,
+      filename: imagenPerfil?.filename,
+      size: imagenPerfil?.size,
+    });
     const exists = await this.userModel.findOne({
       $or: [
         { correo: dto.correo.toLowerCase() },
         { nombreUsuario: dto.nombreUsuario.toLowerCase() },
       ],
     });
-    if (exists) throw new BadRequestException('Usuario o correo ya registrados');
+    if (exists)
+      throw new BadRequestException('Usuario o correo ya registrados');
 
     const hashed = await bcrypt.hash(dto.password, 12);
-    const imagenPerfilUrl = imagenPerfil ? `/uploads/${imagenPerfil.filename}` : null;
+    const imagenPerfilUrl = imagenPerfil
+      ? `/uploads/${imagenPerfil.filename}`
+      : null;
 
     const user = new this.userModel({
       nombre: dto.nombre,
@@ -56,7 +68,11 @@ export class AuthService {
     if (!ok) throw new BadRequestException('Contraseña incorrecta');
 
     const { password, ...u } = user.toObject();
-    const payload = { sub: user._id, username: user.nombreUsuario, perfil: user.perfil };
+    const payload = {
+      sub: user._id,
+      username: user.nombreUsuario,
+      perfil: user.perfil,
+    };
     const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
 
     return { success: true, message: 'Login exitoso', data: u, access_token };
@@ -64,11 +80,17 @@ export class AuthService {
 
   verifyToken(token: string): any {
     console.log(token);
-    return this.jwtService.verify(token, { secret: process.env.JWT_SECRET || 'secreto' });
+    return this.jwtService.verify(token, {
+      secret: process.env.JWT_SECRET || 'secreto',
+    });
   }
 
   refreshToken(user: any): string {
-    const payload = { sub: user.id, username: user.username, perfil: user.perfil };
+    const payload = {
+      sub: user.id,
+      username: user.username,
+      perfil: user.perfil,
+    };
     return this.jwtService.sign(payload, { expiresIn: '15m' });
   }
 }
