@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MulterModule } from '@nestjs/platform-express'; // Importa MulterModule
+import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { AuthModule } from './auth/auth.module';
@@ -13,7 +13,6 @@ import { UsersModule } from './users/users.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    // Configura MulterModule
     MulterModule.register({
       storage: diskStorage({
         destination: './uploads',

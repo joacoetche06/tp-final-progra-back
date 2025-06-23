@@ -42,7 +42,6 @@ export class PostsService {
       filtro.autor = new Types.ObjectId(userId);
     }
 
-    // Caso ordenamiento POR LIKES: usamos aggregation
     if (sort === SortBy.LIKES) {
       const pipeline: any[] = [
         { $match: filtro },
@@ -78,7 +77,6 @@ export class PostsService {
       return { posts, total };
     }
 
-    // Caso ordenamiento POR FECHA (find normal)
     const query = this.postModel
       .find(filtro)
       .sort({ fechaCreacion: -1 })

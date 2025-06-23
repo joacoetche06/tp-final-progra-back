@@ -6,35 +6,35 @@ export type PostDocument = Post & Document;
 
 @Schema({ timestamps: true })
 export class Post {
-  @ApiProperty()
+  @ApiProperty({ example: 'Título del post' })
   @Prop({ required: true })
   titulo: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'Esta es la descripción del post' })
   @Prop({ required: true })
   descripcion: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: '/uploads/imagen.jpg', required: false })
   @Prop()
   imagenUrl?: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: true })
   @Prop({ default: true })
   activo: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ type: String })
   @Prop({ type: MongooseSchema.Types.ObjectId, ref: 'User', required: true })
   autor: Types.ObjectId;
 
-  @ApiProperty()
+  @ApiProperty({ type: [String] })
   @Prop({ type: [MongooseSchema.Types.ObjectId], ref: 'User', default: [] })
   meGusta: Types.ObjectId[];
 
-  @ApiProperty()
+  @ApiProperty({ example: new Date().toISOString() })
   @Prop({ default: Date.now })
   fechaCreacion: Date;
 
-  @ApiProperty()
+  @ApiProperty({ example: new Date().toISOString() })
   @Prop({ default: Date.now })
   fechaActualizacion: Date;
 }

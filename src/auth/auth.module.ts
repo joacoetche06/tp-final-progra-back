@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { MongooseModule } from '@nestjs/mongoose';
-import { MulterModule } from '@nestjs/platform-express'; // Importa MulterModule
+import { MulterModule } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
@@ -17,7 +17,6 @@ import { User, UserSchema } from '../users/schemas/user.schema';
   imports: [
     ConfigModule,
     PassportModule,
-    // Configuración de Multer para este módulo
     MulterModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
