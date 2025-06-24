@@ -8,6 +8,7 @@ import {
   UseGuards,
   UnauthorizedException,
   BadRequestException,
+  Get,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
@@ -69,5 +70,23 @@ export class AuthController {
     if (!user) throw new BadRequestException('No se encontró usuario en token');
     const newToken = this.authService.refreshToken(user);
     return { access_token: newToken };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('current-user')
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'Datos del usuario actual' })
+  async getCurrentUser(@Req() req) {
+    console.log('Obteniendo usuario actual desde el token:', req.user);
+    const userId = req.user.id; // O req.user.id dependiendo de tu payload
+    const user = await this.authService.getUserById(userId);
+
+    if (!user) {
+      throw new UnauthorizedException('Usuario no encontrado');
+    }
+
+    // No devolver la contraseña
+    const { password, ...safeUser } = user.toObject();
+    return safeUser;
   }
 }

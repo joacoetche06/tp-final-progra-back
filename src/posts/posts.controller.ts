@@ -81,4 +81,10 @@ export class PostsController {
   async unlike(@Param('id') id: string, @Req() req) {
     return this.postsService.quitarMeGusta(id, req.user.id);
   }
+
+  @Get(':id')
+  @ApiOkResponse({ description: 'Detalle de una publicación', type: PostEntity })
+  async getById(@Param('id') id: string) {
+    return this.postsService.findById(id);
+  }
 }

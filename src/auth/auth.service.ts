@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -75,7 +75,7 @@ export class AuthService {
     };
     const access_token = this.jwtService.sign(payload, { expiresIn: '15m' });
 
-    return { success: true, message: 'Login exitoso', data: u, access_token };
+    return { success: true, message: 'Login exitoso', user: u, access_token };
   }
 
   verifyToken(token: string): any {
@@ -92,5 +92,13 @@ export class AuthService {
       perfil: user.perfil,
     };
     return this.jwtService.sign(payload, { expiresIn: '15m' });
+  }
+
+  async getUserById(id: string): Promise<UserDocument> {
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    return user;
   }
 }

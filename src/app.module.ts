@@ -7,6 +7,7 @@ import { extname } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { UsersModule } from './users/users.module';
+import { CommentsModule } from './comentarios/comentarios.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     PostsModule,
     UsersModule,
+    CommentsModule
   ],
 })
 export class AppModule {}

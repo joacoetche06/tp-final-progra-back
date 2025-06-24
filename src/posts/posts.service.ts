@@ -132,4 +132,11 @@ export class PostsService {
 
     return { likes: post.meGusta.length };
   }
+
+  async findById(id: string) {
+  return this.postModel
+    .findById(id)
+    .populate('autor', '-password') // opcional: para traer el autor sin la contraseña
+    .lean();
+}
 }
