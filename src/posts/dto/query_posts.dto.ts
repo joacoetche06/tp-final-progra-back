@@ -1,4 +1,11 @@
-import { IsOptional, IsString, IsEnum, IsNumber, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsEnum,
+  IsNumber,
+  Min,
+  IsBoolean,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
@@ -31,4 +38,10 @@ export class QueryPostsDto {
   @IsNumber()
   @Min(1)
   limit?: number = 10;
+
+  @ApiPropertyOptional({ description: 'Incluir comentarios en los posts' })
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  includeComments?: boolean;
 }

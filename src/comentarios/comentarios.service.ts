@@ -13,11 +13,16 @@ export class CommentsService {
   ) {}
 
   async create(postId: string, userId: string, dto: CreateComentarioDto) {
-    return this.comentarioModel.create({
+    const nuevoComentario = await this.comentarioModel.create({
       texto: dto.texto,
       autor: userId,
-      postId,
+      postId: postId,
     });
+
+    // Popula el autor antes de devolverlo
+    return this.comentarioModel
+      .findById(nuevoComentario._id)
+      .populate('autor', 'nombreUsuario imagenPerfilUrl'); // <<< importante
   }
 
   // Agregar este método al servicio
@@ -37,6 +42,8 @@ export class CommentsService {
     }
 
     await comentario.save();
+    await comentario.populate('autor');
+
     return comentario;
   }
 

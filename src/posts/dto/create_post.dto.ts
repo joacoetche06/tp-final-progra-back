@@ -12,6 +12,7 @@ export class CreatePostDto {
   @IsNotEmpty()
   descripcion: string;
 
+  @IsOptional()
   @ApiPropertyOptional({
     type: 'string',
     format: 'binary',

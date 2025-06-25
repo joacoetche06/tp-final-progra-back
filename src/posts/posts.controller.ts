@@ -54,7 +54,9 @@ export class PostsController {
     @Body() dto: CreatePostDto,
     @Req() req,
   ) {
+    console.log('Archivo recibido:', imagen);
     const imagenPath = imagen ? `/uploads/${imagen.filename}` : undefined;
+    console.log('Imagen subida:', imagenPath);
     return this.postsService.crear(dto, req.user.id, imagenPath);
   }
 
@@ -83,7 +85,10 @@ export class PostsController {
   }
 
   @Get(':id')
-  @ApiOkResponse({ description: 'Detalle de una publicación', type: PostEntity })
+  @ApiOkResponse({
+    description: 'Detalle de una publicación',
+    type: PostEntity,
+  })
   async getById(@Param('id') id: string) {
     return this.postsService.findById(id);
   }

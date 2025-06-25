@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CommentsService } from './comentarios.service';
 import { CreateComentarioDto } from './dto/create_comentario.dto';
 import { UpdateComentarioDto } from './dto/update_comentario.dto';
+import { ApiCreatedResponse } from '@nestjs/swagger';
 
 @UseGuards(JwtAuthGuard)
 @Controller('posts') // Cambia la ruta base a 'posts'
@@ -30,7 +31,10 @@ export class CommentsController {
     return this.commentsService.findAll(postId, offset, limit);
   }
 
-  // Mantén tus otras rutas pero actualiza sus paths si es necesario
+  @ApiCreatedResponse({
+    description: 'Comentario creado con autor populado',
+    type: CreateComentarioDto,
+  })
   @Post(':postId/comments') // POST /posts/:postId/comments
   async create(
     @Param('postId') postId: string,
@@ -47,13 +51,15 @@ export class CommentsController {
     @Req() req,
   ) {
     const comentario = await this.commentsService.getById(id);
-    console.log(`Actualizando comentario con ID ${id} por el usuario ${req.user.id}`);
+    console.log(
+      `Actualizando comentario con ID ${id} por el usuario ${req.user.id}`,
+    );
     if (comentario.autor.toString() !== req.user.id) {
-      throw new ForbiddenException('Solo el autor puede modificar el comentario');
+      throw new ForbiddenException(
+        'Solo el autor puede modificar el comentario',
+      );
     }
     console.log(`DTO: ${dto.texto}`);
     return this.commentsService.update(id, dto);
   }
-
-  
 }

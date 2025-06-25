@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -85,14 +89,14 @@ export class AuthService {
     });
   }
 
-  refreshToken(user: any): string {
-    const payload = {
-      sub: user.id,
-      username: user.username,
-      perfil: user.perfil,
-    };
-    return this.jwtService.sign(payload, { expiresIn: '15m' });
-  }
+  // refreshToken(user: any): string {
+  //   const payload = {
+  //     sub: user.id,
+  //     username: user.username,
+  //     perfil: user.perfil,
+  //   };
+  //   return this.jwtService.sign(payload, { expiresIn: '15m' });
+  // }
 
   async getUserById(id: string): Promise<UserDocument> {
     const user = await this.userModel.findById(id).exec();
@@ -100,5 +104,31 @@ export class AuthService {
       throw new NotFoundException('Usuario no encontrado');
     }
     return user;
+  }
+
+  async refreshToken(user: any): Promise<string> {
+    return this.generateToken(user);
+  }
+
+  generateToken(user: any): string {
+    const payload = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+    };
+    return this.jwtService.sign(payload, {
+      expiresIn: '15m', // o el tiempo que desees
+    });
+  }
+
+  isTokenExpired(token: string): boolean {
+    try {
+      const decoded = this.jwtService.verify(token);
+      const now = Date.now() / 1000;
+      // Considerar que el token está "casi expirado" si le quedan menos de 5 minutos
+      return decoded.exp - now < 300;
+    } catch (e) {
+      return true;
+    }
   }
 }

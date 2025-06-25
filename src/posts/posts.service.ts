@@ -35,6 +35,7 @@ export class PostsService {
   async findAll(dto: QueryPostsDto): Promise<{ posts: Post[]; total: number }> {
     const { sort, userId, offset = 0, limit = 10 } = dto;
     const filtro: any = { activo: true };
+
     if (userId) {
       if (!Types.ObjectId.isValid(userId)) {
         throw new NotFoundException('ID de usuario inválido');
@@ -42,49 +43,68 @@ export class PostsService {
       filtro.autor = new Types.ObjectId(userId);
     }
 
-    if (sort === SortBy.LIKES) {
-      const pipeline: any[] = [
-        { $match: filtro },
-        { $addFields: { likesCount: { $size: '$meGusta' } } },
-        { $sort: { likesCount: -1, fechaCreacion: -1 } },
-        { $skip: offset },
-        { $limit: limit },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'autor',
-            foreignField: '_id',
-            as: 'autor',
-          },
+    const pipeline: any[] = [
+      { $match: filtro },
+
+      // Agregamos conteo de likes si se ordena por likes
+      ...(sort === SortBy.LIKES
+        ? [{ $addFields: { likesCount: { $size: '$meGusta' } } }]
+        : []),
+
+      // Ordenamiento
+      {
+        $sort:
+          sort === SortBy.LIKES
+            ? { likesCount: -1, fechaCreacion: -1 }
+            : { fechaCreacion: -1 },
+      },
+
+      { $skip: offset },
+      { $limit: limit },
+
+      // Unimos con autor
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'autor',
+          foreignField: '_id',
+          as: 'autor',
         },
-        { $unwind: '$autor' },
-        {
-          $project: {
-            titulo: 1,
-            descripcion: 1,
-            imagenUrl: 1,
-            activo: 1,
-            createdAt: 1,
-            meGusta: 1,
-            'autor.nombreUsuario': 1,
-            'autor.imagenPerfilUrl': 1,
-          },
+      },
+      { $unwind: '$autor' },
+
+      // Contar comentarios sin traerlos
+      {
+        $lookup: {
+          from: 'comentarios',
+          localField: '_id',
+          foreignField: 'postId',
+          as: 'comentarios',
         },
-      ];
+      },
+      {
+        $addFields: {
+          comentariosCount: { $size: '$comentarios' },
+        },
+      },
 
-      const posts = await this.postModel.aggregate(pipeline);
-      const total = await this.postModel.countDocuments(filtro);
-      return { posts, total };
-    }
+      // Seleccionamos solo lo necesario
+      {
+        $project: {
+          titulo: 1,
+          descripcion: 1,
+          imagenUrl: 1,
+          activo: 1,
+          createdAt: 1,
+          meGusta: 1,
+          comentariosCount: 1,
+          'autor.nombreUsuario': 1,
+          'autor.imagenPerfilUrl': 1,
+        },
+      },
+    ];
 
-    const query = this.postModel
-      .find(filtro)
-      .sort({ fechaCreacion: -1 })
-      .skip(offset)
-      .limit(limit)
-      .populate('autor', 'nombreUsuario imagenPerfilUrl');
-
-    const posts = await query.exec();
+    const posts = await this.postModel.aggregate(pipeline);
     const total = await this.postModel.countDocuments(filtro);
     return { posts, total };
   }
@@ -134,9 +154,9 @@ export class PostsService {
   }
 
   async findById(id: string) {
-  return this.postModel
-    .findById(id)
-    .populate('autor', '-password') // opcional: para traer el autor sin la contraseña
-    .lean();
-}
+    return this.postModel
+      .findById(id)
+      .populate('autor', '-password') // opcional: para traer el autor sin la contraseña
+      .lean();
+  }
 }

@@ -89,4 +89,26 @@ export class AuthController {
     const { password, ...safeUser } = user.toObject();
     return safeUser;
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('refresh-token')
+  @ApiBearerAuth()
+  @ApiOkResponse({ description: 'Token renovado exitosamente' })
+  @ApiUnauthorizedResponse({ description: 'Token inválido o ausente' })
+  async refreshToken(@Req() req) {
+    const user = req.user;
+    if (!user) {
+      throw new UnauthorizedException('Usuario no autenticado');
+    }
+
+    // Verifica si el token está a punto de expirar (opcional)
+    const token = req.headers.authorization?.split(' ')[1];
+    if (token && this.authService.isTokenExpired(token)) {
+      throw new UnauthorizedException('Token ya expirado');
+    }
+
+    // Genera un nuevo token
+    const newToken = this.authService.generateToken(user);
+    return { access_token: newToken };
+  }
 }
