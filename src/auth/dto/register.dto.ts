@@ -69,10 +69,10 @@ export class RegisterDto {
   @Type(() => Date)
   fechaNacimiento?: Date;
 
-  @ApiPropertyOptional({
-    type: 'string',
-    format: 'binary',
-    description: 'Imagen de perfil (formato archivo)',
-  })
-  imagenPerfil?: any; // no se valida con class-validator
+  // @ApiPropertyOptional({
+  //   type: 'string',
+  //   format: 'binary',
+  //   description: 'Imagen de perfil (formato archivo)',
+  // })
+  // imagenPerfil?: any; // no se valida con class-validator
 }
