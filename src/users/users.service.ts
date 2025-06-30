@@ -16,6 +16,7 @@ export class UsersService {
     if (!usuario) {
       throw new NotFoundException('Usuario no encontrado');
     }
+    console.log('Usuario encontrado:', usuario);
 
     return usuario;
   }
