@@ -78,14 +78,13 @@ export class AuthController {
   @ApiOkResponse({ description: 'Datos del usuario actual' })
   async getCurrentUser(@Req() req) {
     console.log('Obteniendo usuario actual desde el token:', req.user);
-    const userId = req.user.id; // O req.user.id dependiendo de tu payload
+    const userId = req.user.id; 
     const user = await this.authService.getUserById(userId);
 
     if (!user) {
       throw new UnauthorizedException('Usuario no encontrado');
     }
 
-    // No devolver la contraseña
     const { password, ...safeUser } = user.toObject();
     return safeUser;
   }
