@@ -100,6 +100,8 @@ export class PostsService {
           comentariosCount: 1,
           'autor.nombreUsuario': 1,
           'autor.imagenPerfilUrl': 1,
+          'autor._id': 1,
+
         },
       },
     ];
@@ -112,7 +114,7 @@ export class PostsService {
   async eliminar(postId: string, solicitante: any) {
     const post = await this.postModel.findById(postId);
     if (!post) throw new NotFoundException('Publicación no encontrada');
-
+    console.log("solicitante:", solicitante);
     const isAutor = post.autor?.toString() === solicitante.id;
     const isAdmin = solicitante.perfil === 'admin';
 
