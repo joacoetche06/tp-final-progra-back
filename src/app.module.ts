@@ -8,6 +8,9 @@ import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { UsersModule } from './users/users.module';
 import { CommentsModule } from './comentarios/comentarios.module';
+import { EstadisticasController } from './estadisticas/estadisticas.controller';
+import { EstadisticasService } from './estadisticas/estadisticas.service';
+import { EstadisticasModule } from './estadisticas/estadisticas.module';
 
 @Module({
   imports: [
@@ -43,7 +46,10 @@ import { CommentsModule } from './comentarios/comentarios.module';
     AuthModule,
     PostsModule,
     UsersModule,
-    CommentsModule
+    CommentsModule,
+    EstadisticasModule,
   ],
+  controllers: [EstadisticasController],
+  providers: [EstadisticasService],
 })
 export class AppModule {}

@@ -1,5 +1,16 @@
-import { Controller, Get, Post, Delete, Body, Param, Req, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Req,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from './users.service';
 import {
   ApiBearerAuth,
@@ -12,7 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { User } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
-import { AdminGuard } from '../auth/admin.guard';
+import { AdminGuard } from '../auth/guards/admin.guard';
 
 @ApiTags('Usuarios')
 @Controller('usuarios')
@@ -33,12 +44,14 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Get()
   @ApiBearerAuth()
-  @ApiOkResponse({ 
-    description: 'Listado de todos los usuarios', 
-    type: [User] 
+  @ApiOkResponse({
+    description: 'Listado de todos los usuarios',
+    type: [User],
   })
   @ApiUnauthorizedResponse({ description: 'Token inválido o ausente' })
-  @ApiForbiddenResponse({ description: 'Acceso denegado (no es administrador)' })
+  @ApiForbiddenResponse({
+    description: 'Acceso denegado (no es administrador)',
+  })
   async listarUsuarios() {
     return this.usersService.findAll();
   }
@@ -48,12 +61,14 @@ export class UsersController {
   @Post()
   @ApiBearerAuth()
   @ApiBody({ type: CreateUserDto })
-  @ApiCreatedResponse({ 
-    description: 'Usuario creado exitosamente', 
-    type: User 
+  @ApiCreatedResponse({
+    description: 'Usuario creado exitosamente',
+    type: User,
   })
   @ApiUnauthorizedResponse({ description: 'Token inválido o ausente' })
-  @ApiForbiddenResponse({ description: 'Acceso denegado (no es administrador)' })
+  @ApiForbiddenResponse({
+    description: 'Acceso denegado (no es administrador)',
+  })
   async crearUsuario(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
@@ -62,9 +77,14 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, AdminGuard)
   @Delete(':id')
   @ApiBearerAuth()
-  @ApiOkResponse({ description: 'Usuario deshabilitado exitosamente', type: User })
+  @ApiOkResponse({
+    description: 'Usuario deshabilitado exitosamente',
+    type: User,
+  })
   @ApiUnauthorizedResponse({ description: 'Token inválido o ausente' })
-  @ApiForbiddenResponse({ description: 'Acceso denegado (no es administrador)' })
+  @ApiForbiddenResponse({
+    description: 'Acceso denegado (no es administrador)',
+  })
   async deshabilitarUsuario(@Param('id') id: string) {
     return this.usersService.disableUser(id);
   }
@@ -76,7 +96,9 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiOkResponse({ description: 'Usuario reactivado exitosamente', type: User })
   @ApiUnauthorizedResponse({ description: 'Token inválido o ausente' })
-  @ApiForbiddenResponse({ description: 'Acceso denegado (no es administrador)' })
+  @ApiForbiddenResponse({
+    description: 'Acceso denegado (no es administrador)',
+  })
   async reactivarUsuario(@Param('id') id: string) {
     return this.usersService.enableUser(id);
   }

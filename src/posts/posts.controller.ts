@@ -17,7 +17,7 @@ import { extname } from 'path';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create_post.dto';
 import { QueryPostsDto } from './dto/query_posts.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import {
   ApiBearerAuth,
   ApiTags,

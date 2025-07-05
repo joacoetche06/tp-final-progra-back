@@ -14,7 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import {
   ApiTags,
   ApiCreatedResponse,
@@ -78,7 +78,7 @@ export class AuthController {
   @ApiOkResponse({ description: 'Datos del usuario actual' })
   async getCurrentUser(@Req() req) {
     console.log('Obteniendo usuario actual desde el token:', req.user);
-    const userId = req.user.id; 
+    const userId = req.user.id;
     const user = await this.authService.getUserById(userId);
 
     if (!user) {

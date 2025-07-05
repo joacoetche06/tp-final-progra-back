@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -27,7 +27,7 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto): Promise<User> {
     const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
-    
+
     const newUser = new this.userModel({
       ...createUserDto,
       password: hashedPassword,
@@ -38,12 +38,10 @@ export class UsersService {
   }
 
   async disableUser(id: string): Promise<User> {
-    const user = await this.userModel.findByIdAndUpdate(
-      id,
-      { isActive: false },
-      { new: true }
-    ).select('-password');
-    
+    const user = await this.userModel
+      .findByIdAndUpdate(id, { isActive: false }, { new: true })
+      .select('-password');
+
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
@@ -51,12 +49,10 @@ export class UsersService {
   }
 
   async enableUser(id: string): Promise<User> {
-    const user = await this.userModel.findByIdAndUpdate(
-      id,
-      { isActive: true },
-      { new: true }
-    ).select('-password');
-    
+    const user = await this.userModel
+      .findByIdAndUpdate(id, { isActive: true }, { new: true })
+      .select('-password');
+
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }

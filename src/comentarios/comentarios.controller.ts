@@ -10,7 +10,7 @@ import {
   Req,
   ForbiddenException,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CommentsService } from './comentarios.service';
 import { CreateComentarioDto } from './dto/create_comentario.dto';
 import { UpdateComentarioDto } from './dto/update_comentario.dto';
