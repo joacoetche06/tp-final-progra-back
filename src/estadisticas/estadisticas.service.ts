@@ -6,6 +6,7 @@ import {
   Comentario,
   ComentarioDocument,
 } from 'src/comentarios/schemas/comentario.schema';
+import { User, UserDocument } from 'src/users/schemas/user.schema'; // Importar modelo de usuario
 import { Model } from 'mongoose';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class EstadisticasService {
     @InjectModel(Post.name) private postModel: Model<PostDocument>,
     @InjectModel(Comentario.name)
     private comentarioModel: Model<ComentarioDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>, // Añade esto
   ) {}
 
   async getPublicacionesPorUsuario(from: string, to: string) {
@@ -27,9 +29,36 @@ export class EstadisticasService {
         },
       },
       {
+        $lookup: {
+          from: 'users',
+          localField: 'autor',
+          foreignField: '_id',
+          as: 'user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$user',
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
         $group: {
-          _id: '$autor',
+          _id: {
+            userId: '$autor',
+            username: {
+              $ifNull: ['$user.nombreUsuario', 'Desconocido'],
+            },
+          },
           total: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          userId: '$_id.userId',
+          username: '$_id.username', // Cambiado de nombreUsuario a username
+          total: 1,
         },
       },
     ]);
@@ -70,8 +99,18 @@ export class EstadisticasService {
         },
       },
       {
+        $lookup: {
+          // Unir con colección de posts
+          from: 'posts',
+          localField: 'postId',
+          foreignField: '_id',
+          as: 'post',
+        },
+      },
+      { $unwind: '$post' }, // Descomponer el array
+      {
         $group: {
-          _id: '$postId',
+          _id: '$post.titulo', // Usar título en lugar de ID
           total: { $sum: 1 },
         },
       },
